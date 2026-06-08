@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Aviso de Privacidad — Porto Belo Residencial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,400&family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #F5F0E8; --surface: #FFFFFF; --accent: #C9BFA8; --accent-deep: #A99E81;
+    --ink: #1A1A1A; --ink-soft: #5A554B; --line: #E2DACB;
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Public Sans', system-ui, sans-serif;
+    background: var(--bg); color: var(--ink); line-height: 1.75; font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--ink); text-decoration: none; }
+  ::selection { background: var(--ink); color: var(--bg); }
+
+  header {
+    position: sticky; top: 0; z-index: 10;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav {
+    max-width: 1240px; margin: 0 auto; padding: 0 40px; height: 76px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .brand { display: flex; flex-direction: column; line-height: 1; }
+  .brand .name { font-family: 'Playfair Display', serif; font-weight: 600; font-size: 21px; letter-spacing: 0.18em; }
+  .brand .sub { font-size: 9px; letter-spacing: 0.42em; color: var(--accent-deep); margin-top: 5px; text-transform: uppercase; font-weight: 600; }
+  .back {
+    font-size: 13px; font-weight: 600; letter-spacing: 0.02em; color: var(--ink-soft);
+    display: inline-flex; align-items: center; gap: 8px; transition: color .2s;
+  }
+  .back:hover { color: var(--ink); }
+
+  .container { max-width: 780px; margin: 0 auto; padding: 4.5rem 2.5rem 6rem; }
+
+  .eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent-deep); margin-bottom: 18px; }
+  .page-title { font-family: 'Playfair Display', serif; font-size: clamp(34px, 5vw, 52px); font-weight: 500; letter-spacing: -0.01em; line-height: 1.05; }
+  .page-meta { font-size: 13px; color: var(--accent-deep); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 18px; padding-bottom: 2.25rem; border-bottom: 1px solid var(--line); }
+
+  .lead { font-size: 17px; color: var(--ink-soft); line-height: 1.65; margin: 2.25rem 0 1rem; }
+
+  h2 {
+    font-family: 'Public Sans', sans-serif; font-size: 12px; font-weight: 700;
+    letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink);
+    margin: 3rem 0 1rem; display: flex; align-items: baseline; gap: 14px;
+  }
+  h2 .num { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 500; color: var(--accent-deep); letter-spacing: 0; }
+
+  p { color: var(--ink-soft); margin-bottom: 1rem; font-size: 15.5px; }
+  strong { color: var(--ink); font-weight: 600; }
+
+  ul { margin: 0.5rem 0 1.25rem 0; list-style: none; }
+  ul li { position: relative; padding-left: 22px; margin-bottom: 0.5rem; color: var(--ink-soft); font-size: 15.5px; }
+  ul li::before { content: ""; position: absolute; left: 2px; top: 12px; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; }
+
+  .content a { color: var(--ink); border-bottom: 1px solid var(--accent); transition: border-color .2s; }
+  .content a:hover { border-bottom-color: var(--ink); }
+
+  .highlight-box { border-left: 3px solid var(--accent); padding: 1.1rem 1.4rem; margin: 1.75rem 0; background: var(--surface); border-radius: 0 3px 3px 0; }
+  .highlight-box p { margin: 0; font-size: 14.5px; color: var(--ink-soft); }
+
+  .contact-block { margin-top: 3.5rem; padding: 2.25rem; border: 1px solid var(--line); border-radius: 3px; background: var(--surface); }
+  .contact-block p { font-size: 14.5px; }
+
+  footer { text-align: center; padding: 2.5rem 2rem; border-top: 1px solid var(--line); font-size: 12px; color: var(--accent-deep); letter-spacing: 0.06em; }
+
+  @media (max-width: 600px) {
+    .nav { padding: 0 22px; }
+    .container { padding: 3rem 1.4rem 4rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <a class="brand" href="index.html">
+      <span class="name">PORTO BELO</span>
+      <span class="sub">Residencial · Tijuana</span>
+    </a>
+    <a class="back" href="index.html">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Volver al inicio
+    </a>
+  </div>
+</header>
+
+<div class="container content">
+
+  <div class="eyebrow">Legal</div>
+  <h1 class="page-title">Aviso de Privacidad</h1>
+  <p class="page-meta">Última actualización: Junio 2026</p>
+
+  <p class="lead">Porto Belo Residencial, desarrollado por Grupo PROCAPITAL, con operaciones en Tijuana, Baja California, México, es responsable del tratamiento de sus datos personales conforme a la Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP) y su Reglamento.</p>
+
+  <p>Al contactarnos a través de WhatsApp, redes sociales, nuestro sitio web o cualquier otro medio, usted acepta los términos del presente Aviso de Privacidad.</p>
+
+  <h2><span class="num">01</span> Datos que recopilamos</h2>
+  <p>Podemos recopilar los siguientes tipos de información cuando usted nos contacta o nos proporciona sus datos:</p>
+  <ul>
+    <li>Nombre completo</li>
+    <li>Número de teléfono (incluyendo WhatsApp)</li>
+    <li>Correo electrónico</li>
+    <li>Ciudad o área de residencia</li>
+    <li>Preferencias de inversión o compra de vivienda</li>
+    <li>Información que usted comparte voluntariamente durante la conversación</li>
+  </ul>
+
+  <h2><span class="num">02</span> Finalidad del tratamiento</h2>
+  <p>Sus datos personales serán utilizados para las siguientes finalidades:</p>
+  <ul>
+    <li>Brindarle información sobre Porto Belo Residencial, Torre AMPGUAYCURA</li>
+    <li>Responder sus consultas sobre disponibilidad, precios y condiciones del proyecto</li>
+    <li>Agendar visitas, llamadas o reuniones de seguimiento</li>
+    <li>Enviarle información comercial sobre el proyecto (preventa, promociones, avances de obra)</li>
+    <li>Dar seguimiento a su proceso de compra o inversión</li>
+    <li>Cumplir con obligaciones legales aplicables</li>
+  </ul>
+
+  <div class="highlight-box">
+    <p>Sus datos no serán vendidos, cedidos ni compartidos con terceros ajenos al proyecto sin su consentimiento previo, salvo por obligación legal o para el cumplimiento de los fines descritos en este aviso.</p>
+  </div>
+
+  <h2><span class="num">03</span> Comunicaciones vía WhatsApp</h2>
+  <p>Al contactarnos a través de WhatsApp o al proporcionarnos su número de teléfono, usted consiente expresamente recibir mensajes relacionados con Porto Belo Residencial, incluyendo:</p>
+  <ul>
+    <li>Respuestas a sus consultas e información del proyecto</li>
+    <li>Actualizaciones sobre avance de obra y fechas de entrega</li>
+    <li>Información sobre disponibilidad de unidades y precios</li>
+    <li>Recordatorios de citas o seguimiento comercial</li>
+  </ul>
+  <p>Nuestras comunicaciones por WhatsApp se realizan mediante la plataforma oficial de WhatsApp Business API, en cumplimiento con las Políticas de Uso Aceptable de Meta Platforms, Inc.</p>
+  <p>Usted puede solicitar en cualquier momento dejar de recibir comunicaciones respondiendo <strong>"STOP"</strong> o <strong>"DETENER"</strong> a cualquiera de nuestros mensajes.</p>
+
+  <h2><span class="num">04</span> Conservación de datos</h2>
+  <p>Sus datos personales serán conservados durante el tiempo necesario para cumplir con las finalidades descritas en este aviso, o mientras exista una relación comercial activa, y en todo caso por el tiempo que establezcan las disposiciones legales aplicables.</p>
+
+  <h2><span class="num">05</span> Compartición de datos</h2>
+  <p>Porto Belo Residencial podrá compartir sus datos con:</p>
+  <ul>
+    <li>Proveedores de servicios tecnológicos que nos asisten en la operación del proyecto (CRM, plataformas de mensajería)</li>
+    <li>Asesores legales, notarios o instituciones financieras vinculadas al proceso de compraventa</li>
+    <li>Autoridades competentes cuando así lo requiera la ley</li>
+  </ul>
+  <p>En todos los casos, los terceros que reciban sus datos estarán sujetos a obligaciones de confidencialidad equivalentes a las previstas en este aviso.</p>
+
+  <h2><span class="num">06</span> Derechos ARCO</h2>
+  <p>Usted tiene derecho a Acceder, Rectificar, Cancelar u Oponerse al tratamiento de sus datos personales (Derechos ARCO). Para ejercer estos derechos puede contactarnos a través de:</p>
+  <ul>
+    <li>Sitio web: <a href="https://www.portobeloresidencial.com">www.portobeloresidencial.com</a></li>
+    <li>WhatsApp: <a href="https://wa.me/5216631197920">+52 663 119 7920</a></li>
+  </ul>
+  <p>Su solicitud será atendida en un plazo máximo de 20 días hábiles conforme a lo establecido en la LFPDPPP.</p>
+
+  <h2><span class="num">07</span> Cookies y tecnologías de seguimiento</h2>
+  <p>Nuestro sitio web <a href="https://www.portobeloresidencial.com">portobeloresidencial.com</a> puede utilizar cookies y tecnologías similares para mejorar la experiencia de navegación, analizar el tráfico y personalizar contenido. Usted puede configurar su navegador para rechazar cookies, aunque esto puede limitar algunas funcionalidades del sitio.</p>
+
+  <h2><span class="num">08</span> Seguridad</h2>
+  <p>Implementamos medidas de seguridad técnicas, administrativas y físicas razonables para proteger sus datos personales contra acceso no autorizado, pérdida, alteración o divulgación indebida.</p>
+
+  <h2><span class="num">09</span> Cambios a este aviso</h2>
+  <p>Nos reservamos el derecho de actualizar este Aviso de Privacidad en cualquier momento. Las modificaciones serán publicadas en este mismo sitio con la fecha de la última actualización. Le recomendamos revisarlo periódicamente.</p>
+
+  <div class="contact-block">
+    <h2 style="margin-top:0;"><span class="num">·</span> Contacto</h2>
+    <p>Si tiene dudas sobre este aviso o el tratamiento de sus datos personales, puede contactarnos:</p>
+    <p>
+      <strong>Porto Belo Residencial — Grupo PROCAPITAL</strong><br />
+      Tijuana, Baja California, México<br />
+      Sitio web: <a href="https://www.portobeloresidencial.com">www.portobeloresidencial.com</a><br />
+      WhatsApp: <a href="https://wa.me/5216631197920">+52 663 119 7920</a>
+    </p>
+  </div>
+
+</div>
+
+<footer>
+  © 2026 Porto Belo Residencial · Grupo PROCAPITAL · Tijuana, B.C., México
+</footer>
+
+</body>
+</html>
