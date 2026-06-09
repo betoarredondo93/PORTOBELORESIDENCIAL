@@ -11,6 +11,7 @@ const CONTACT = {
   whatsappLabel: "+52 663 119 7920",   // Cómo se muestra el número (con formato bonito)
   email: "ventas@portobelo.mx",        // ⚠ CORREO AÚN DE EJEMPLO — reemplázalo por el real
   web: "www.portobeloresidencial.com", // Sitio web
+  maps: "https://maps.app.goo.gl/Uu3wh8ybfUMmzWBZ8", // Ubicación en Google Maps (mapa clickeable)
   city: "Tijuana, Baja California",    // Ciudad / ubicación
 };
 /* ▲▲▲  FIN DATOS DE CONTACTO  ▲▲▲ */
@@ -35,7 +36,8 @@ const STRINGS = {
       eyebrow: "Vida vertical · Tijuana",
       l1: "La mejor inversión",
       l2: "en la ciudad de Tijuana",
-      sub: "Porto Belo Residencial redefine la vida urbana en Tijuana: 16 unidades de diseño contemporáneo, amenidades de autor y una plusvalía pensada para crecer contigo.",
+      ctaPrimary: "Solicitar información", ctaSecondary: "Ver modelos",
+      sub: "Porto Belo Residencial redefine la vida urbana en Tijuana: 19 unidades de diseño contemporáneo, amenidades de autor y una plusvalía pensada para crecer contigo.",
     },
     form: {
       eyebrow: "Recibe la información",
@@ -45,23 +47,23 @@ const STRINGS = {
       thanksTitle: "¡Gracias!", thanksBody: "Un asesor te contactará muy pronto.",
     },
     stats: [
-      { n: "16", l: "Unidades totales" },
-      { n: "11", l: "Disponibles" },
+      { n: "19", l: "Unidades totales" },
+      { n: "17", l: "Disponibles" },
       { n: "+25%", l: "Plusvalía proyectada" },
-      { n: "Jun 2027", l: "Entrega estimada" },
+      { n: "Junio 2027", l: "Fecha entrega" },
     ],
     models: {
-      eyebrow: "Cuatro tipologías",
+      eyebrow: "Tipologías",
       title: "Elige el modelo que se adapta a tu vida",
-      lead: "Distribuciones eficientes con acabados premium. Solo quedan 11 unidades disponibles de las 16 totales.",
-      listLabel: "Valor de venta", preventaLabel: "Preventa −10%", cta: "Solicitar modelo", avail: "Disponible", sold: "Agotado",
-      preventa: "Preventa −10% disponible",
-      note: "* Precios en pesos (MXN), sujetos a cambio. El precio de preventa aplica −10% sobre el valor de venta. Consulta el plan de pagos con un asesor. La plusvalía +25% es una proyección estimada, no garantizada.",
+      lead: "Distribuciones eficientes con acabados premium.",
+      listLabel: "Valor de venta", preventaLabel: "Preventa", cta: "Solicitar modelo", avail: "Disponible", sold: "Agotado",
+      preventa: "Preventa −12.5% y −7.5% disponible",
+      note: "* Precios en pesos (MXN), sujetos a cambio. El precio de preventa varía por modelo (−7.5% a −12.5%) sobre el valor de venta. Consulta el plan de pagos con un asesor. La plusvalía +25% es una proyección estimada, no garantizada.",
       items: [
-        { tag: "D1", name: "Modelo D1", area: "82.88 m²", loc: "Frontal", hl: "Terraza en sala y recámara", img: "images/plan-d1.jpg", specs: ["2 recámaras", "2 baños", "Terraza"], price: "$4,210,400", preventa: null, status: "sold" },
-        { tag: "D2", name: "Modelo D2", area: "66.11 m²", loc: "Intermedio frontal", hl: "Posición frontal de la torre", img: "images/plan-d2.jpg", specs: ["2 recámaras", "2 baños"], price: "$3,140,000", preventa: "$2,826,000", status: "avail" },
-        { tag: "D3", name: "Modelo D3", area: "66.11 m²", loc: "Intermedio posterior", hl: "Posición posterior de la torre", img: "images/plan-d3.jpg", specs: ["2 recámaras", "2 baños"], price: "$3,140,000", preventa: "$2,826,000", status: "avail" },
-        { tag: "D4", name: "Modelo D4", area: "77 m²", loc: "Posterior", hl: "La distribución más amplia disponible", img: "images/plan-d4.jpg", specs: ["2 recámaras", "2 baños"], price: "$3,657,100", preventa: "$3,291,390", status: "avail" },
+        { tag: "D1", name: "Modelo D1", area: "89 m²", loc: "Frontal", hl: "Terraza en sala y recámara", img: "images/plan-d1.jpg", specs: ["2 recámaras", "2 baños", "Terraza"], price: "$4,672,500", preventa: null, status: "avail" },
+        { tag: "D2", name: "Modelo D2", area: "71 m²", loc: "Intermedio frontal", hl: "Posición frontal de la torre", img: "images/plan-d2.jpg", specs: ["2 recámaras", "2 baños"], price: "$3,372,500", preventa: "$2,950,937", dcto: "Preventa −12.5%", status: "avail" },
+        { tag: "D3", name: "Modelo D3", area: "71 m²", loc: "Intermedio posterior", hl: "Posición posterior de la torre", img: "images/plan-d3.jpg", specs: ["2 recámaras", "2 baños"], price: "$3,372,500", preventa: "$2,950,937", dcto: "Preventa −12.5%", status: "avail" },
+        { tag: "D4", name: "Modelo D4", area: "78 m²", loc: "Posterior", hl: "La distribución más amplia disponible", img: "images/plan-d4.jpg", specs: ["2 recámaras", "2 baños"], price: "$3,705,000", preventa: "$3,427,125", dcto: "Preventa −7.5%", status: "avail" },
       ],
     },
     video: {
@@ -72,8 +74,8 @@ const STRINGS = {
     amen: {
       eyebrow: "Amenidades", title: "Espacios diseñados para vivir mejor",
       items: [
-        { t: "Alberca", d: "Alberca panorámica con área de descanso y solárium." },
-        { t: "Roof Garden", d: "Terraza verde con lounge y vistas a la ciudad." },
+        { t: "Sky Bar", d: "Tu espacio exclusivo para convivir, recibir invitados y disfrutar el atardecer." },
+        { t: "Roof Garden", d: "Jardín en las alturas con áreas verdes y rincones para relajarte al aire libre." },
         { t: "Pet Friendly", d: "Áreas pensadas para ti y tus mascotas." },
         { t: "Elevador", d: "Acceso directo y seguro a cada nivel." },
       ],
@@ -81,7 +83,7 @@ const STRINGS = {
     loc: {
       eyebrow: "Ubicación", title: "En el corazón conectado de Tijuana",
       lead: "A pasos de los principales puntos de la ciudad, con accesos rápidos a vialidades clave y la frontera.",
-      addrTitle: "Dirección", addr: "Colinas del Alamar · Zona Guaycura, Tijuana, B.C.",
+      addrTitle: "Dirección", addr: "Calle Sierra Pinta, Ampliación Guaycura · Tijuana, B.C.", mapCta: "Ver en Google Maps",
       pois: [
         { name: "CETYS Universidad", dist: "2 min" },
         { name: "Parque Morelos", dist: "5 min" },
@@ -99,7 +101,7 @@ const STRINGS = {
     foot: {
       contact: "Contacto", contactLines: ["Tel / WhatsApp: por definir", "ventas@portobelo.mx (placeholder)", "Tijuana, Baja California"],
       legalT: "Aviso", legal: "Imágenes ilustrativas. Las cifras de plusvalía son proyecciones estimadas y no constituyen una garantía de rendimiento.",
-      rights: "Todos los derechos reservados.", made: "Grupo PROCAPITAL", privacy: "Aviso de privacidad",
+      rights: "Todos los derechos reservados.", made: "Grupo MÁS HUMANOS", privacy: "Aviso de privacidad", developedBy: "Un desarrollo de",
     },
   },
   en: {
@@ -108,7 +110,8 @@ const STRINGS = {
       eyebrow: "Vertical living · Tijuana",
       l1: "The best investment",
       l2: "in the city of Tijuana",
-      sub: "Porto Belo Residencial reimagines urban life in Tijuana: 16 contemporary residences, signature amenities, and appreciation designed to grow with you.",
+      ctaPrimary: "Request information", ctaSecondary: "View models",
+      sub: "Porto Belo Residencial reimagines urban life in Tijuana: 19 contemporary residences, signature amenities, and appreciation designed to grow with you.",
     },
     form: {
       eyebrow: "Get the information",
@@ -118,23 +121,23 @@ const STRINGS = {
       thanksTitle: "Thank you!", thanksBody: "An advisor will contact you shortly.",
     },
     stats: [
-      { n: "16", l: "Total units" },
-      { n: "11", l: "Available" },
+      { n: "19", l: "Total units" },
+      { n: "17", l: "Available" },
       { n: "+25%", l: "Projected appreciation" },
-      { n: "Jun 2027", l: "Est. delivery" },
+      { n: "June 2027", l: "Delivery date" },
     ],
     models: {
-      eyebrow: "Four layouts",
+      eyebrow: "Layouts",
       title: "Choose the model that fits your life",
-      lead: "Efficient layouts with premium finishes. Only 11 of 16 units remain available.",
-      listLabel: "Sale price", preventaLabel: "Pre-sale −10%", cta: "Request model", avail: "Available", sold: "Sold out",
-      preventa: "Pre-sale −10% available",
-      note: "* Prices in Mexican pesos (MXN), subject to change. Pre-sale price applies −10% off the sale price. Ask an advisor about payment plans. The +25% appreciation is an estimated projection, not guaranteed.",
+      lead: "Efficient layouts with premium finishes.",
+      listLabel: "Sale price", preventaLabel: "Pre-sale", cta: "Request model", avail: "Available", sold: "Sold out",
+      preventa: "Pre-sale −12.5% & −7.5% available",
+      note: "* Prices in Mexican pesos (MXN), subject to change. Pre-sale price varies by model (−7.5% to −12.5%) off the sale price. Ask an advisor about payment plans. The +25% appreciation is an estimated projection, not guaranteed.",
       items: [
-        { tag: "D1", name: "Model D1", area: "82.88 m²", loc: "Front", hl: "Terrace in living & bedroom", img: "images/plan-d1.jpg", specs: ["2 bedrooms", "2 baths", "Terrace"], price: "$4,210,400", preventa: null, status: "sold" },
-        { tag: "D2", name: "Model D2", area: "66.11 m²", loc: "Front-middle", hl: "Front side of the tower", img: "images/plan-d2.jpg", specs: ["2 bedrooms", "2 baths"], price: "$3,140,000", preventa: "$2,826,000", status: "avail" },
-        { tag: "D3", name: "Model D3", area: "66.11 m²", loc: "Rear-middle", hl: "Rear side of the tower", img: "images/plan-d3.jpg", specs: ["2 bedrooms", "2 baths"], price: "$3,140,000", preventa: "$2,826,000", status: "avail" },
-        { tag: "D4", name: "Model D4", area: "77 m²", loc: "Rear", hl: "The largest layout available", img: "images/plan-d4.jpg", specs: ["2 bedrooms", "2 baths"], price: "$3,657,100", preventa: "$3,291,390", status: "avail" },
+        { tag: "D1", name: "Model D1", area: "89 m²", loc: "Front", hl: "Terrace in living & bedroom", img: "images/plan-d1.jpg", specs: ["2 bedrooms", "2 baths", "Terrace"], price: "$4,672,500", preventa: null, status: "avail" },
+        { tag: "D2", name: "Model D2", area: "71 m²", loc: "Front-middle", hl: "Front side of the tower", img: "images/plan-d2.jpg", specs: ["2 bedrooms", "2 baths"], price: "$3,372,500", preventa: "$2,950,937", dcto: "Pre-sale −12.5%", status: "avail" },
+        { tag: "D3", name: "Model D3", area: "71 m²", loc: "Rear-middle", hl: "Rear side of the tower", img: "images/plan-d3.jpg", specs: ["2 bedrooms", "2 baths"], price: "$3,372,500", preventa: "$2,950,937", dcto: "Pre-sale −12.5%", status: "avail" },
+        { tag: "D4", name: "Model D4", area: "78 m²", loc: "Rear", hl: "The largest layout available", img: "images/plan-d4.jpg", specs: ["2 bedrooms", "2 baths"], price: "$3,705,000", preventa: "$3,427,125", dcto: "Pre-sale −7.5%", status: "avail" },
       ],
     },
     video: {
@@ -145,8 +148,8 @@ const STRINGS = {
     amen: {
       eyebrow: "Amenities", title: "Spaces designed for better living",
       items: [
-        { t: "Pool", d: "Panoramic pool with lounge and solarium." },
-        { t: "Roof Garden", d: "Green terrace with lounge and city views." },
+        { t: "Sky Bar", d: "Your exclusive space to gather, host guests and enjoy the sunset." },
+        { t: "Roof Garden", d: "Elevated garden with green areas and quiet corners to unwind outdoors." },
         { t: "Pet Friendly", d: "Areas designed for you and your pets." },
         { t: "Elevator", d: "Direct, secure access to every floor." },
       ],
@@ -154,7 +157,7 @@ const STRINGS = {
     loc: {
       eyebrow: "Location", title: "In Tijuana's connected heart",
       lead: "Steps from the city's key landmarks, with quick access to main roads and the border.",
-      addrTitle: "Address", addr: "Colinas del Alamar · Guaycura, Tijuana, B.C.",
+      addrTitle: "Address", addr: "Calle Sierra Pinta, Ampliación Guaycura · Tijuana, B.C.", mapCta: "Open in Google Maps",
       pois: [
         { name: "CETYS University", dist: "2 min" },
         { name: "Parque Morelos", dist: "5 min" },
@@ -172,7 +175,7 @@ const STRINGS = {
     foot: {
       contact: "Contact", contactLines: ["Phone / WhatsApp: TBD", "sales@portobelo.mx (placeholder)", "Tijuana, Baja California"],
       legalT: "Notice", legal: "Illustrative images. Appreciation figures are estimated projections and do not constitute a guarantee of returns.",
-      rights: "All rights reserved.", made: "Grupo PROCAPITAL", privacy: "Privacy policy",
+      rights: "All rights reserved.", made: "Grupo MÁS HUMANOS", privacy: "Privacy policy", developedBy: "A development by",
     },
   },
 };
@@ -220,12 +223,12 @@ function App() {
   return (
     <div ref={rootRef} style={themeVars}>
       <Nav S={S} lang={lang} setLang={setLang} onCTA={() => scrollTo("#contacto")} />
-      <Hero S={S} tw={t} />
+      <Hero S={S} tw={t} onCTA={() => scrollTo("#contacto")} onModels={() => scrollTo("#modelos")} />
       <Stats S={S} />
       <Modelos S={S} onPick={() => scrollTo("#contacto")} />
       <Video S={S} />
       <Amenidades S={S} />
-      <Ubicacion S={S} />
+      <Ubicacion S={S} contact={CONTACT} />
       <CTAFinal S={S} contact={CONTACT} />
       <Footer S={S} contact={CONTACT} />
 

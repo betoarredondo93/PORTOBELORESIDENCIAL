@@ -23,6 +23,8 @@ function Ico({ name, size = 30 }) {
       return (<svg {...c}><circle cx="11" cy="11" r="2"/><circle cx="21" cy="11" r="2"/><circle cx="7" cy="17" r="2"/><circle cx="25" cy="17" r="2"/><path d="M16 16c-3 0-6 2.5-6 5.5 0 2 1.6 3 3.4 2.2.9-.4 1.7-.6 2.6-.6s1.7.2 2.6.6c1.8.8 3.4-.2 3.4-2.2 0-3-3-5.5-6-5.5Z"/></svg>);
     case "elevator":
       return (<svg {...c}><rect x="7" y="5" width="18" height="22" rx="1"/><path d="M16 5v22"/><path d="M11 13l1.8-2.2L14.6 13M17.4 19l1.8 2.2L21 19"/></svg>);
+    case "skybar":
+      return (<svg {...c}><path d="M7 8h18l-9 9z"/><path d="M16 17v9M11 26h10"/><path d="M20 8l3-3"/></svg>);
     case "pin":
       return (<svg {...c}><path d="M16 28s9-7.5 9-15A9 9 0 0 0 7 13c0 7.5 9 15 9 15Z"/><circle cx="16" cy="13" r="3"/></svg>);
     default:
@@ -103,7 +105,49 @@ function HeroForm({ S, compact }) {
 }
 
 /* ---------- HERO ---------- */
-function Hero({ S, tw }) {
+const HERO_IMAGES = [
+  "images/render-fachada.jpg",
+  "images/interior-familia.jpg",
+  "images/interior-sala.jpg",
+  "images/interior-cocina.jpg",
+];
+
+function Carousel({ images, height, objectPosition }) {
+  const [i, setI] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const n = images.length;
+  useEffect(() => {
+    if (paused) return;
+    const t = setInterval(() => setI((p) => (p + 1) % n), 4800);
+    return () => clearInterval(t);
+  }, [n, paused]);
+  const go = (d) => setI((p) => (p + d + n) % n);
+  const arrow = (side) => ({
+    position: "absolute", top: "50%", [side]: 14, transform: "translateY(-50%)",
+    width: 42, height: 42, borderRadius: "50%", background: "rgba(26,26,26,.42)", color: "#fff",
+    fontSize: 22, lineHeight: 1, display: "grid", placeItems: "center", backdropFilter: "blur(4px)",
+    zIndex: 3, transition: "background .2s",
+  });
+  return (
+    <div className="pb-carousel" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}
+      style={{ position: "relative", height, borderRadius: 3, overflow: "hidden", boxShadow: "0 30px 60px -36px rgba(40,34,20,.5)" }}>
+      {images.map((src, idx) => (
+        <img key={idx} src={src} alt={"Render Porto Belo Residencial " + (idx + 1)} loading={idx === 0 ? "eager" : "lazy"}
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: objectPosition || "center", opacity: idx === i ? 1 : 0, transition: "opacity .9s ease" }} />
+      ))}
+      <button onClick={() => go(-1)} aria-label="Anterior" className="pb-caro-arrow" style={arrow("left")}>‹</button>
+      <button onClick={() => go(1)} aria-label="Siguiente" className="pb-caro-arrow" style={arrow("right")}>›</button>
+      <div style={{ position: "absolute", bottom: 16, left: 0, right: 0, display: "flex", gap: 8, justifyContent: "center", zIndex: 3 }}>
+        {images.map((_, idx) => (
+          <button key={idx} onClick={() => setI(idx)} aria-label={"Imagen " + (idx + 1)}
+            style={{ width: idx === i ? 22 : 8, height: 8, borderRadius: 99, background: idx === i ? "#fff" : "rgba(255,255,255,.55)", border: "none", padding: 0, cursor: "pointer", transition: "all .3s" }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Hero({ S, tw, onCTA, onModels }) {
   const headline = (
     <h1 style={{ fontSize: "clamp(40px, 6vw, 78px)", letterSpacing: "-0.01em" }}>
       {S.hero.l1}<br /><em style={{ fontStyle: "italic", color: "var(--accent-deep)" }}>{S.hero.l2}</em>
@@ -137,7 +181,7 @@ function Hero({ S, tw }) {
           <p style={{ fontSize: 18, lineHeight: 1.6, color: "var(--ink-soft)", maxWidth: 560, margin: "22px auto 0" }}>{S.hero.sub}</p>
         </div>
         <div className="wrap pb-hero-grid" style={{ display: "grid", gridTemplateColumns: "1.4fr .9fr", gap: 36, alignItems: "end", marginTop: 56 }}>
-          <img src="images/render-fachada.jpg" alt="Render fachada Porto Belo Residencial" className="reveal" style={{ height: 460, width: "100%", objectFit: "cover", objectPosition: "center", borderRadius: 3, display: "block" }} />
+          <div className="reveal"><Carousel images={HERO_IMAGES} height={460} objectPosition="center" /></div>
           <div className="reveal pb-heroform" style={{ textAlign: "left" }}><HeroForm S={S} compact /></div>
         </div>
       </section>
@@ -147,15 +191,20 @@ function Hero({ S, tw }) {
   // default: render right
   return (
     <section id="top" style={{ paddingTop: 64, paddingBottom: 20 }}>
-      <div className="wrap pb-hero-grid" style={{ display: "grid", gridTemplateColumns: "1fr .82fr", gap: 60, alignItems: "center" }}>
+      <div className="wrap pb-hero-grid" style={{ display: "grid", gridTemplateColumns: "1fr .9fr", gap: 60, alignItems: "center" }}>
         <div className="reveal">
           <div className="eyebrow" style={{ marginBottom: 20 }}>{S.hero.eyebrow}</div>
           {headline}{sub}
-          <div style={{ marginTop: 34, maxWidth: 430 }}><HeroForm S={S} compact /></div>
+          <div style={{ marginTop: 36, display: "flex", gap: 14, flexWrap: "wrap" }}>
+            <button className="btn btn-dark" onClick={onCTA}>{S.hero.ctaPrimary}</button>
+            <button className="btn btn-outline" onClick={onModels}>{S.hero.ctaSecondary}</button>
+          </div>
         </div>
         <div className="reveal pb-hero-img" style={{ position: "relative" }}>
           <div style={{ position: "absolute", top: -22, right: -22, bottom: 40, left: 40, background: "var(--accent)", borderRadius: 3, zIndex: 0 }} />
-          <img src="images/render-fachada.jpg" alt="Render fachada Porto Belo Residencial" style={{ position: "relative", zIndex: 1, height: 600, width: "100%", objectFit: "cover", objectPosition: "42% center", borderRadius: 3, display: "block", boxShadow: "0 30px 60px -36px rgba(40,34,20,.5)" }} />
+          <div style={{ position: "relative", zIndex: 1 }}>
+            <Carousel images={HERO_IMAGES} height={600} objectPosition="42% center" />
+          </div>
         </div>
       </div>
     </section>
@@ -218,7 +267,7 @@ function Modelos({ S, onPick }) {
                 <div style={{ borderTop: "1px solid var(--line)", paddingTop: 16, marginTop: "auto", display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 8 }}>
                   {!sold && m.preventa ? (
                     <div>
-                      <div style={{ fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--ink)", fontWeight: 700 }}>{S.models.preventaLabel}</div>
+                      <div style={{ fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--ink)", fontWeight: 700 }}>{m.dcto || S.models.preventaLabel}</div>
                       <div style={{ fontFamily: "var(--font-head)", fontSize: 24, marginTop: 2 }}>{m.preventa}</div>
                       <div style={{ fontSize: 11.5, color: "var(--accent-deep)", textDecoration: "line-through", marginTop: 1 }}>{m.price}</div>
                     </div>
@@ -277,7 +326,7 @@ function Video({ S }) {
 
 /* ---------- AMENIDADES ---------- */
 function Amenidades({ S }) {
-  const icons = ["pool", "garden", "pet", "elevator"];
+  const icons = ["skybar", "garden", "pet", "elevator"];
   return (
     <section id="amenidades" style={{ background: "var(--accent)", padding: "104px 0" }}>
       <div className="wrap">
@@ -301,13 +350,18 @@ function Amenidades({ S }) {
 }
 
 /* ---------- UBICACION ---------- */
-function Ubicacion({ S }) {
+function Ubicacion({ S, contact }) {
   return (
     <section id="ubicacion" style={{ padding: "110px 0" }}>
       <div className="wrap" style={{ display: "grid", gridTemplateColumns: "1fr 1.05fr", gap: 60, alignItems: "center" }} >
-        <div className="reveal pb-ubic-map">
-          <img src="images/mapa-ubicacion.jpg" alt="Mapa de ubicación de Porto Belo Residencial en Colinas del Alamar, Tijuana" loading="lazy" style={{ width: "100%", height: "auto", borderRadius: 3, display: "block", border: "1px solid var(--line)", boxShadow: "0 30px 60px -42px rgba(40,34,20,.5)" }} />
-        </div>
+        <a href={contact.maps} target="_blank" rel="noopener" className="reveal pb-ubic-map pb-maplink" style={{ position: "relative", display: "block", borderRadius: 3, overflow: "hidden", border: "1px solid var(--line)", boxShadow: "0 30px 60px -42px rgba(40,34,20,.5)" }}>
+          <img src="images/mapa-ubicacion.jpg" alt="Mapa de ubicación de Porto Belo Residencial en Ampliación Guaycura, Tijuana" loading="lazy" style={{ width: "100%", height: "auto", display: "block" }} />
+          <span className="pb-maphint" style={{ position: "absolute", bottom: 14, right: 14, background: "rgba(26,26,26,.84)", color: "var(--bg)", fontSize: 12, fontWeight: 600, letterSpacing: "0.04em", padding: "9px 14px", borderRadius: 2, display: "inline-flex", gap: 7, alignItems: "center", backdropFilter: "blur(4px)" }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            {S.loc.mapCta}
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg>
+          </span>
+        </a>
         <div className="reveal">
           <div className="eyebrow" style={{ marginBottom: 14 }}>{S.loc.eyebrow}</div>
           <h2 style={{ fontSize: "clamp(30px,3.6vw,46px)", marginBottom: 16 }}>{S.loc.title}</h2>
@@ -329,14 +383,20 @@ function Ubicacion({ S }) {
           </ul>
         </div>
       </div>
-      <style>{`@media (max-width: 880px){ #ubicacion .wrap{ grid-template-columns:1fr !important; } }`}</style>
+      <style>{`
+        @media (max-width: 880px){ #ubicacion .wrap{ grid-template-columns:1fr !important; } }
+        .pb-maplink{ transition: box-shadow .3s; cursor:pointer; }
+        .pb-maplink img{ transition: transform .55s ease; }
+        .pb-maplink:hover img{ transform: scale(1.035); }
+        .pb-maplink:hover .pb-maphint{ background: rgba(26,26,26,.96); }
+      `}</style>
     </section>
   );
 }
 
 /* ---------- CTA FINAL ---------- */
 function CTAFinal({ S, contact }) {
-  const [f, setF] = useState({ nombre: "", contacto: "" });
+  const [f, setF] = useState({ nombre: "", whatsapp: "", correo: "" });
   const [done, setDone] = useState(false);
   const upd = (k) => (e) => setF({ ...f, [k]: e.target.value });
   const wa = "https://wa.me/" + contact.whatsapp + "?text=" + encodeURIComponent(S.cta.waMsg);
@@ -351,10 +411,13 @@ function CTAFinal({ S, contact }) {
         {done ? (
           <div className="reveal" style={{ fontSize: 18, color: "var(--accent)" }}>{S.form.thanksTitle} — {S.form.thanksBody}</div>
         ) : (
-          <form className="reveal" onSubmit={(e) => { e.preventDefault(); if (f.nombre && f.contacto) setDone(true); }} style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center", maxWidth: 600, margin: "0 auto" }}>
-            <input value={f.nombre} onChange={upd("nombre")} placeholder={S.form.namePh} required style={{ flex: "1 1 180px", padding: "15px 16px", borderRadius: 2, border: "1px solid rgba(255,255,255,.2)", background: "rgba(255,255,255,.06)", color: "var(--bg)", fontSize: 15 }} />
-            <input value={f.contacto} onChange={upd("contacto")} placeholder={S.cta.contactPh} required style={{ flex: "1 1 180px", padding: "15px 16px", borderRadius: 2, border: "1px solid rgba(255,255,255,.2)", background: "rgba(255,255,255,.06)", color: "var(--bg)", fontSize: 15 }} />
-            <button type="submit" className="btn" style={{ background: "var(--accent)", color: "var(--ink)", flex: "0 0 auto" }}>{S.cta.send}</button>
+          <form className="reveal" onSubmit={(e) => { e.preventDefault(); if (f.nombre && f.whatsapp && f.correo) setDone(true); }} style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 620, margin: "0 auto" }}>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+              <input value={f.nombre} onChange={upd("nombre")} placeholder={S.form.namePh} required style={{ flex: "1 1 160px", padding: "15px 16px", borderRadius: 2, border: "1px solid rgba(255,255,255,.2)", background: "rgba(255,255,255,.06)", color: "var(--bg)", fontSize: 15 }} />
+              <input value={f.whatsapp} onChange={upd("whatsapp")} placeholder="WhatsApp" inputMode="tel" required style={{ flex: "1 1 160px", padding: "15px 16px", borderRadius: 2, border: "1px solid rgba(255,255,255,.2)", background: "rgba(255,255,255,.06)", color: "var(--bg)", fontSize: 15 }} />
+              <input value={f.correo} onChange={upd("correo")} placeholder={S.form.email} type="email" required style={{ flex: "1 1 160px", padding: "15px 16px", borderRadius: 2, border: "1px solid rgba(255,255,255,.2)", background: "rgba(255,255,255,.06)", color: "var(--bg)", fontSize: 15 }} />
+            </div>
+            <button type="submit" className="btn" style={{ background: "var(--accent)", color: "var(--ink)", width: "100%", padding: "15px" }}>{S.cta.send}</button>
           </form>
         )}
         <div style={{ display: "flex", alignItems: "center", gap: 16, justifyContent: "center", margin: "34px 0 0" }} className="reveal">
@@ -379,6 +442,10 @@ function Footer({ S, contact }) {
         <div>
           <div style={{ fontFamily: "var(--font-head)", fontWeight: 600, fontSize: 20, letterSpacing: "0.18em" }}>PORTO BELO</div>
           <div style={{ fontSize: 12, letterSpacing: "0.34em", color: "var(--accent-deep)", marginTop: 6, textTransform: "uppercase" }}>Residencial · Tijuana, B.C.</div>
+          <div style={{ marginTop: 26 }}>
+            <div className="eyebrow" style={{ marginBottom: 10 }}>{S.foot.developedBy}</div>
+            <img src="images/procapital-dark.png" alt="Procapital — Impulsamos tu patrimonio" style={{ height: 58, width: "auto", display: "block" }} />
+          </div>
         </div>
         <div style={{ display: "flex", gap: 60, flexWrap: "wrap" }}>
           <div>
