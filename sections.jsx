@@ -260,6 +260,17 @@ const TOUR_FADE = 0.18;
    No hay video nuevo aquí: el último clip se queda en su frame final. */
 const TOUR_OUTRO = 5;
 
+/* ── Estrategia de descarga ──────────────────────────────────────
+   Con scroll rápido el recorrido se trababa porque solo se bajaba
+   el clip actual y el siguiente: el scroll llegaba a un clip que
+   todavía no existía. Ahora se baja un bloque inicial de golpe y
+   después se mantiene una ventana por delante.
+   El scroll NUNCA espera a la red: si el clip no está listo se
+   congela el último frame disponible y el recorrido sigue vivo. */
+const TOUR_PREFETCH_FIRST = 4; // clips que bajan al entrar la sección
+const TOUR_PREFETCH_AHEAD = 3; // clips que se mantienen listos por delante
+const TOUR_MAX_INFLIGHT = 4;   // descargas simultáneas como tope
+
 /* dur = duración real del archivo en segundos (medida con ffprobe).
    Si reemplazas un clip, actualiza su dur o el scrub se desfasa. */
 const TOUR_CLIPS = [
@@ -363,8 +374,12 @@ function TourVirtual({ S, onModels }) {
   const unlocked = useRef(false);
   const navOn = useRef(false);  // ¿el video está tapando el nav?
 
+  const inflight = useRef(0);   // descargas en curso
+  const seeded = useRef(false); // ¿ya se lanzó el bloque inicial?
+
   const [ready, setReady] = useState(false);
   const [error, setError] = useState(false);
+  const [loaded, setLoaded] = useState(0); // clips listos, solo para el indicador
 
   /* --- nav transparente mientras el tour cubre la pantalla --- */
   function setNav(on) {
@@ -373,17 +388,37 @@ function TourVirtual({ S, onModels }) {
     document.documentElement.classList.toggle("tour-on", on);
   }
 
-  /* --- descarga del clip como Blob --- */
-  function loadClip(i) {
-    if (i < 0 || i >= TOUR_CLIPS.length) return Promise.resolve(null);
-    if (urls.current[i]) return Promise.resolve(urls.current[i]);
-    if (pending.current[i]) return pending.current[i];
+  /* --- descarga del clip como Blob ---
+     urgent salta el tope de descargas simultáneas: se usa para el clip
+     que el scroll necesita AHORA y para el bloque inicial. */
+  function loadClip(i, urgent) {
+    if (i < 0 || i >= TOUR_CLIPS.length) return null;
+    if (urls.current[i] || pending.current[i]) return pending.current[i] || null;
+    if (!urgent && inflight.current >= TOUR_MAX_INFLIGHT) return null;
+    inflight.current++;
+    const done = () => { inflight.current = Math.max(0, inflight.current - 1); };
     const p = fetch(tourSrc(TOUR_CLIPS[i]))
       .then((r) => { if (!r.ok) throw new Error("HTTP " + r.status); return r.blob(); })
-      .then((b) => { const u = URL.createObjectURL(b); urls.current[i] = u; return u; })
-      .catch(() => { pending.current[i] = null; if (i === 0) setError(true); return null; });
+      .then((b) => {
+        done();
+        urls.current[i] = URL.createObjectURL(b);
+        setLoaded((n) => n + 1);
+        return urls.current[i];
+      })
+      .catch(() => {
+        done();
+        pending.current[i] = null;
+        if (i === 0) setError(true);
+        return null;
+      });
     pending.current[i] = p;
     return p;
+  }
+
+  /* --- mantiene la ventana de clips por delante del scroll --- */
+  function prefetchFrom(i) {
+    loadClip(i, true); // el que se está viendo nunca espera turno
+    for (let n = 1; n <= TOUR_PREFETCH_AHEAD; n++) loadClip(i + n);
   }
 
   /* --- monta un clip ya descargado en el <video> --- */
@@ -463,9 +498,8 @@ function TourVirtual({ S, onModels }) {
       setCapAlpha(outroRef.current, oa);
     }
 
-    // actual + siguiente
-    if (!urls.current[i] && !pending.current[i]) loadClip(i);
-    if (!urls.current[i + 1] && !pending.current[i + 1]) loadClip(i + 1);
+    // mantiene bajados el actual y los siguientes TOUR_PREFETCH_AHEAD
+    prefetchFrom(i);
     if (urls.current[i]) attach(i);
 
     const cur = active.current;
@@ -492,8 +526,14 @@ function TourVirtual({ S, onModels }) {
     // el rAF solo corre mientras la sección está cerca del viewport
     const io = new IntersectionObserver((entries) => {
       entries.forEach((e) => {
-        if (e.isIntersecting) { loadClip(0); loadClip(1); start(); }
-        else stop();
+        if (e.isIntersecting) {
+          // bloque inicial: los primeros clips salen todos a la vez
+          if (!seeded.current) {
+            seeded.current = true;
+            for (let n = 0; n < TOUR_PREFETCH_FIRST; n++) loadClip(n, true);
+          }
+          start();
+        } else stop();
       });
     }, { rootMargin: "600px 0px" });
     io.observe(sec);
@@ -585,9 +625,14 @@ function TourVirtual({ S, onModels }) {
           ) : null}
         </div>
 
-        {/* estado de carga */}
+        {/* Indicador de carga: solo la primera vez, mientras baja el bloque
+            inicial. En cuanto el <video> pinta su primer frame desaparece
+            y no vuelve a salir en toda la sesión. */}
         {!ready && !error ? (
-          <div className="pb-tour-msg">{T.loading}</div>
+          <div className="pb-tour-loader">
+            <span className="pb-tour-loader-bar"><i /></span>
+            <span>{T.loading} {Math.min(loaded, TOUR_PREFETCH_FIRST)}/{TOUR_PREFETCH_FIRST}</span>
+          </div>
         ) : null}
         {error ? <div className="pb-tour-msg">{T.error}</div> : null}
 
@@ -769,6 +814,37 @@ function TourVirtual({ S, onModels }) {
           .pb-tour-title { font-size: clamp(2.8rem, 7vw, 5rem); }
           .pb-tour-cap { bottom:8vh; }
         }
+
+        /* Indicador de carga discreto: pastilla abajo al centro, con una
+           barra indeterminada. No tapa el video ni bloquea nada. */
+        .pb-tour-loader {
+          position:absolute; left:50%; bottom:64px; transform:translateX(-50%);
+          display:flex; align-items:center; gap:12px; pointer-events:none;
+          padding:9px 16px; border-radius:99px;
+          background: rgba(0,0,0,.55);
+          backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+          border:1px solid color-mix(in srgb, var(--accent) 26%, transparent);
+          font-family: var(--font-body), sans-serif; font-size:10.5px; font-weight:600;
+          letter-spacing:.16em; text-transform:uppercase;
+          color: color-mix(in srgb, var(--bg) 82%, transparent);
+          white-space:nowrap;
+        }
+        .pb-tour-loader-bar {
+          position:relative; width:34px; height:2px; border-radius:2px; overflow:hidden;
+          background: color-mix(in srgb, var(--bg) 22%, transparent);
+        }
+        .pb-tour-loader-bar i {
+          position:absolute; top:0; bottom:0; width:45%; border-radius:2px;
+          background: var(--accent); animation: pb-tour-slide 1.15s ease-in-out infinite;
+        }
+        @keyframes pb-tour-slide {
+          0%   { left:-45%; }
+          100% { left:100%; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .pb-tour-loader-bar i { animation:none; left:0; width:100%; opacity:.5; }
+        }
+        @media (max-width: 760px){ .pb-tour-loader { bottom:52px; font-size:9.5px; } }
 
         .pb-tour-msg {
           position:absolute; inset:0; display:grid; place-items:center;
