@@ -52,7 +52,7 @@ const STRINGS = {
       { n: "19", l: "Unidades totales" },
       { n: "16", l: "Disponibles" },
       { n: "+25%", l: "Plusvalía proyectada" },
-      { n: "Junio 2027", l: "Fecha entrega" },
+      { n: "Agosto 2027", l: "Fecha entrega" },
     ],
     /* ═══ TOUR VIRTUAL ═══
        Cada clave corresponde a un clip de TOUR_CLIPS en sections.jsx.
@@ -68,7 +68,7 @@ const STRINGS = {
           eyebrow: "AMP Guaycura · Tijuana",
           t: "Llegas antes que el resto",
           d: "Primer desarrollo vertical de Amp. Guaycura. Entrar primero a una zona en consolidación es distinto a entrar tarde a una zona saturada.",
-          tags: ["19 unidades", "5 niveles", "Entrega junio 2027"],
+          tags: ["19 unidades", "5 niveles", "Entrega agosto 2027"],
         },
         puente1: { t: "", d: "" },
         social: {
@@ -128,7 +128,7 @@ const STRINGS = {
       title: "Elige el modelo que se adapta a tu vida",
       lead: "Distribuciones eficientes con acabados de calidad.",
       preventaLabel: "Preventa", cta: "Solicitar modelo", avail: "Disponible", sold: "Agotado",
-      summary: "19 unidades · 16 disponibles · Entrega junio 2027",
+      summary: "19 unidades · 16 disponibles · Entrega agosto 2027",
       discountNote: "Precios de preventa con 7.5% de descuento sobre valor de venta. Aplica mientras dure el inventario de esta etapa.",
       /* {model} y {area} se reemplazan con los datos de la tarjeta */
       waModel: "Hola, me interesa el modelo {model} de {area} en Porto Belo.",
@@ -198,7 +198,7 @@ const STRINGS = {
       { n: "19", l: "Total units" },
       { n: "16", l: "Available" },
       { n: "+25%", l: "Projected appreciation" },
-      { n: "June 2027", l: "Delivery date" },
+      { n: "August 2027", l: "Delivery date" },
     ],
     /* ═══ VIRTUAL TOUR ═══ Keys match TOUR_CLIPS in sections.jsx.
        The "puente" clips are the transitions and carry no copy. */
@@ -211,7 +211,7 @@ const STRINGS = {
           eyebrow: "Amp. Guaycura · Tijuana",
           t: "You get here before everyone else",
           d: "The first vertical development in Amp. Guaycura. Getting into a neighborhood while it is still taking shape is not the same as arriving late to a saturated one.",
-          tags: ["19 units", "5 floors", "Delivery June 2027"],
+          tags: ["19 units", "5 floors", "Delivery August 2027"],
         },
         puente1: { t: "", d: "" },
         social: {
@@ -271,7 +271,7 @@ const STRINGS = {
       title: "Choose the model that fits your life",
       lead: "Efficient layouts with quality finishes.",
       preventaLabel: "Pre-sale", cta: "Request model", avail: "Available", sold: "Sold out",
-      summary: "19 units · 16 available · Delivery June 2027",
+      summary: "19 units · 16 available · Delivery August 2027",
       discountNote: "Pre-sale prices with 7.5% off the sale price. Valid while this phase's inventory lasts.",
       /* {model} and {area} are replaced with the card's data */
       waModel: "Hi, I'm interested in the {model} model, {area}, at Porto Belo.",
