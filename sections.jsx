@@ -43,11 +43,11 @@ function Nav({ S, lang, setLang, onCTA }) {
     ["#contacto", S.nav.contact],
   ];
   return (
-    <header style={{ position: "sticky", top: 0, zIndex: 40, background: "color-mix(in srgb, var(--bg) 86%, transparent)", backdropFilter: "blur(10px)", borderBottom: "1px solid var(--line)" }}>
+    <header className="pb-nav" style={{ position: "sticky", top: 0, zIndex: 40, background: "color-mix(in srgb, var(--bg) 86%, transparent)", backdropFilter: "blur(10px)", borderBottom: "1px solid var(--line)", transition: "background .35s ease, border-color .35s ease" }}>
       <div className="wrap" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: 76 }}>
         <a href="#top" style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
           <span style={{ fontFamily: "var(--font-head)", fontWeight: 600, fontSize: 21, letterSpacing: "0.18em" }}>PORTO BELO</span>
-          <span style={{ fontSize: 9, letterSpacing: "0.42em", color: "var(--accent-deep)", marginTop: 5, textTransform: "uppercase", fontWeight: 600 }}>Residencial · Tijuana</span>
+          <span className="pb-nav-sub" style={{ fontSize: 9, letterSpacing: "0.42em", color: "var(--accent-deep)", marginTop: 5, textTransform: "uppercase", fontWeight: 600 }}>Residencial · Tijuana</span>
         </a>
         <nav style={{ display: "flex", alignItems: "center", gap: 34 }} className="pb-navlinks">
           {items.map(([href, label]) => (
@@ -55,9 +55,9 @@ function Nav({ S, lang, setLang, onCTA }) {
           ))}
         </nav>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <div style={{ display: "flex", border: "1px solid var(--line)", borderRadius: 2, overflow: "hidden" }}>
+          <div className="pb-lang" style={{ display: "flex", border: "1px solid var(--line)", borderRadius: 2, overflow: "hidden" }}>
             {["es", "en"].map((l) => (
-              <button key={l} onClick={() => setLang(l)} style={{ fontSize: 11.5, fontWeight: 600, letterSpacing: "0.08em", padding: "7px 11px", textTransform: "uppercase", background: lang === l ? "var(--ink)" : "transparent", color: lang === l ? "var(--bg)" : "var(--ink-soft)", transition: "all .2s" }}>{l}</button>
+              <button key={l} className="pb-langbtn" data-on={lang === l ? "1" : "0"} onClick={() => setLang(l)} style={{ fontSize: 11.5, fontWeight: 600, letterSpacing: "0.08em", padding: "7px 11px", textTransform: "uppercase", background: lang === l ? "var(--ink)" : "transparent", color: lang === l ? "var(--bg)" : "var(--ink-soft)", transition: "all .2s" }}>{l}</button>
             ))}
           </div>
           <button className="btn btn-dark" onClick={onCTA}>{S.nav.cta}</button>
@@ -65,6 +65,27 @@ function Nav({ S, lang, setLang, onCTA }) {
       </div>
       <style>{`
         @media (max-width: 1040px){ .pb-navlinks{ display:none !important; } }
+
+        /* ── Nav sobre el tour virtual ─────────────────────────────
+           TourVirtual pone la clase .tour-on en <html> mientras el
+           video cubre la franja superior. Aquí el nav se vuelve
+           transparente y su contenido pasa a crema para leerse sobre
+           el video. Al salir de la sección recupera su fondo solo. */
+        html.tour-on .pb-nav {
+          background: transparent !important;
+          border-bottom-color: transparent !important;
+          backdrop-filter: none !important;
+        }
+        html.tour-on .pb-nav a,
+        html.tour-on .pb-nav .pb-navlink { color: var(--bg) !important; }
+        html.tour-on .pb-nav .pb-navlink { opacity:.82; }
+        html.tour-on .pb-nav .pb-navlink:hover { opacity:1; }
+        html.tour-on .pb-nav .pb-nav-sub { color: var(--accent) !important; }
+        html.tour-on .pb-nav .pb-lang { border-color: color-mix(in srgb, var(--bg) 42%, transparent) !important; }
+        html.tour-on .pb-nav .pb-langbtn[data-on="1"] { background: var(--bg) !important; color: var(--ink) !important; }
+        html.tour-on .pb-nav .pb-langbtn[data-on="0"] { color: color-mix(in srgb, var(--bg) 72%, transparent) !important; }
+        html.tour-on .pb-nav .btn-dark { background: var(--bg) !important; color: var(--ink) !important; }
+        html.tour-on .pb-nav .btn-dark:hover { background:#fff !important; }
       `}</style>
     </header>
   );
@@ -211,6 +232,599 @@ function Hero({ S, tw, onCTA, onModels }) {
   );
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   TOUR VIRTUAL — recorrido controlado por scroll
+   ───────────────────────────────────────────────────────────────
+   Cómo funciona:
+   · La sección mide TOUR_SCROLL_VH de alto y adentro lleva un
+     "escenario" sticky de 100vh con un solo <video> a pantalla completa.
+   · El scroll NO reproduce el video: mueve su currentTime (scrub).
+   · Los 11 clips se tratan como UNA sola línea de tiempo continua
+     (76 s en total). El scroll se reparte proporcional a la duración
+     de cada clip, así la velocidad percibida es constante.
+   · Cada clip se descarga como Blob y se reproduce desde un object URL:
+     muchos hosts (GitHub Pages incluido) no sirven byte-range y sin
+     esto el video se queda congelado en el frame 0.
+   · Se precarga el clip siguiente mientras se ve el actual.
+   · El scrub se aplica dentro de un requestAnimationFrame con
+     suavizado, nunca directo en el evento de scroll.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Alto total de la sección (vh). Más alto = recorrido más lento. */
+const TOUR_SCROLL_VH = 1000;
+/* Suavizado del scrub, 0-1. Más bajo = más inercia. */
+const TOUR_EASE = 0.12;
+/* Porción de cada clip usada para el fade de entrada/salida del texto. */
+const TOUR_FADE = 0.18;
+/* Segundos "virtuales" al final, para la tarjeta de cierre.
+   No hay video nuevo aquí: el último clip se queda en su frame final. */
+const TOUR_OUTRO = 5;
+
+/* dur = duración real del archivo en segundos (medida con ffprobe).
+   Si reemplazas un clip, actualiza su dur o el scrub se desfasa. */
+const TOUR_CLIPS = [
+  { key: "llegada",  src: "videos/01_llegada.mp4",  mob: null, dur: 8 },
+  { key: "puente1",  src: "videos/02_puente1.mp4",  mob: null, dur: 6 },
+  { key: "social",   src: "videos/03_social.mp4",   mob: null, dur: 10 },
+  { key: "puente2",  src: "videos/04_puente2.mp4",  mob: null, dur: 6 },
+  { key: "cocina",   src: "videos/05_cocina.mp4",   mob: null, dur: 8 },
+  { key: "puente3",  src: "videos/06_puente3.mp4",  mob: null, dur: 6 },
+  { key: "recamara", src: "videos/07_recamara.mp4", mob: null, dur: 6 },
+  { key: "puente4",  src: "videos/08_puente4.mp4",  mob: null, dur: 6 },
+  { key: "balcon",   src: "videos/09_balcon.mp4",   mob: null, dur: 6 },
+  { key: "puente5",  src: "videos/10_puente5.mp4",  mob: null, dur: 6 },
+  { key: "roof",     src: "videos/11_roof.mp4",     mob: null, dur: 8 },
+];
+
+/* ═══════════════════════════════════════════════════════════════
+   ▼▼▼  FUENTE DE VIDEO SEGÚN DISPOSITIVO  ▼▼▼
+   HOY: escritorio y móvil usan los MISMOS clips 16:9.
+
+   CUANDO TENGAS LA CADENA VERTICAL 9:16:
+   1. Súbela a videos/ y pon cada ruta en el campo `mob` de arriba,
+      p. ej. mob: "videos/m01_llegada.mp4".
+   2. Descomenta la línea marcada abajo.
+   3. Si los clips verticales duran distinto, agrégales `durMob` y
+      cámbialo también en tourDur().
+   Nota: el corte se evalúa al montar. Cruzar el breakpoint
+   redimensionando la ventana requiere recargar.
+   ═══════════════════════════════════════════════════════════════ */
+const TOUR_MOBILE_MAX = 760;
+function tourIsMobile() {
+  return typeof window !== "undefined" &&
+    window.matchMedia("(max-width: " + TOUR_MOBILE_MAX + "px)").matches;
+}
+function tourSrc(clip) {
+  // ▼▼▼ DESCOMENTA ESTA LÍNEA PARA ACTIVAR LOS VERTICALES ▼▼▼
+  // if (tourIsMobile() && clip.mob) return clip.mob;
+  // ▲▲▲ ▲▲▲
+  return clip.src;
+}
+function tourDur(clip) {
+  // if (tourIsMobile() && clip.mob && clip.durMob) return clip.durMob;
+  return clip.dur;
+}
+
+const TOUR_TOTAL = TOUR_CLIPS.reduce((a, c) => a + c.dur, 0);
+const TOUR_SPAN = TOUR_TOTAL + TOUR_OUTRO; // línea de tiempo completa, con cierre
+const TOUR_STARTS = (() => {
+  let acc = 0;
+  return TOUR_CLIPS.map((c) => { const s = acc; acc += c.dur; return s; });
+})();
+
+/* Escenas que necesitan oscurecer el video de fondo. La capa se enciende
+   y se apaga siguiendo la misma opacidad que el texto de la escena, así
+   que aparece y desaparece con ella. Las demás escenas no se tocan. */
+const TOUR_DIM = { balcon: true };
+
+/* segundo global de la línea de tiempo -> [índice de clip, segundo dentro del clip] */
+function tourLocate(t) {
+  for (let i = TOUR_CLIPS.length - 1; i >= 0; i--) {
+    if (t >= TOUR_STARTS[i]) return [i, t - TOUR_STARTS[i]];
+  }
+  return [0, 0];
+}
+const clamp01 = (n) => (n < 0 ? 0 : n > 1 ? 1 : n);
+
+/* Opacidad + desplazamiento de un bloque de texto, escrito directo al DOM.
+   Va por ref y no por estado: con estado React re-renderizaría 60 veces
+   por segundo mientras se hace scroll. */
+function setCapAlpha(el, a) {
+  if (!el || el._a === a) return;
+  el._a = a;
+  el.style.opacity = a;
+  el.style.transform = "translateY(" + ((1 - a) * 16).toFixed(2) + "px)";
+  el.style.visibility = a > 0.001 ? "visible" : "hidden";
+  // .is-in dispara las entradas escalonadas de adentro (ver .pb-poi)
+  const on = a > 0.06;
+  if (el._in !== on) { el._in = on; el.classList.toggle("is-in", on); }
+}
+
+function TourVirtual({ S, onModels }) {
+  const T = (S && S.tour) || {};
+  const caps = T.captions || {};
+  const O = T.outro || {};
+
+  const sectionRef = useRef(null);
+  const stageRef = useRef(null);
+  const videoRef = useRef(null);
+  const barRef = useRef(null);
+  const hintRef = useRef(null);
+  const outroRef = useRef(null);
+  const dimRef = useRef(null);
+  const capRefs = useRef([]);
+
+  const urls = useRef({});      // índice -> object URL ya descargado
+  const pending = useRef({});   // índice -> promesa en vuelo
+  const active = useRef(-1);    // índice actualmente montado en el <video>
+  const smooth = useRef(0);     // segundo global suavizado
+  const raf = useRef(0);
+  const running = useRef(false);
+  const unlocked = useRef(false);
+  const navOn = useRef(false);  // ¿el video está tapando el nav?
+
+  const [ready, setReady] = useState(false);
+  const [error, setError] = useState(false);
+
+  /* --- nav transparente mientras el tour cubre la pantalla --- */
+  function setNav(on) {
+    if (navOn.current === on) return;
+    navOn.current = on;
+    document.documentElement.classList.toggle("tour-on", on);
+  }
+
+  /* --- descarga del clip como Blob --- */
+  function loadClip(i) {
+    if (i < 0 || i >= TOUR_CLIPS.length) return Promise.resolve(null);
+    if (urls.current[i]) return Promise.resolve(urls.current[i]);
+    if (pending.current[i]) return pending.current[i];
+    const p = fetch(tourSrc(TOUR_CLIPS[i]))
+      .then((r) => { if (!r.ok) throw new Error("HTTP " + r.status); return r.blob(); })
+      .then((b) => { const u = URL.createObjectURL(b); urls.current[i] = u; return u; })
+      .catch(() => { pending.current[i] = null; if (i === 0) setError(true); return null; });
+    pending.current[i] = p;
+    return p;
+  }
+
+  /* --- monta un clip ya descargado en el <video> --- */
+  function attach(i) {
+    const v = videoRef.current, u = urls.current[i];
+    if (!v || !u || active.current === i) return;
+    active.current = i;
+    v.src = u;
+    try { v.load(); } catch (e) {}
+  }
+
+  /* --- iOS no permite seek en un video que nunca se tocó --- */
+  function unlock() {
+    if (unlocked.current) return;
+    unlocked.current = true;
+    const v = videoRef.current;
+    if (!v) return;
+    const pr = v.play();
+    if (pr && pr.then) pr.then(() => v.pause()).catch(() => {});
+    else { try { v.pause(); } catch (e) {} }
+  }
+
+  /* --- loop de scrub --- */
+  function tick() {
+    raf.current = requestAnimationFrame(tick);
+    const sec = sectionRef.current, stage = stageRef.current, v = videoRef.current;
+    if (!sec || !stage || !v) return;
+
+    const rect = sec.getBoundingClientRect();
+    const span = sec.offsetHeight - stage.offsetHeight;
+    const p = span > 0 ? clamp01(-rect.top / span) : 0;
+
+    // el nav se vuelve transparente mientras el video tapa la franja superior
+    setNav(rect.top <= 0 && rect.bottom > 96);
+
+    // suavizado sobre la línea de tiempo global (no se reinicia al cambiar de clip)
+    const target = p * TOUR_SPAN;
+    let st = smooth.current + (target - smooth.current) * TOUR_EASE;
+    if (Math.abs(target - st) < 0.005) st = target;
+    smooth.current = st;
+
+    // el tramo final (TOUR_OUTRO) no tiene video: se queda en el último frame
+    const vt = Math.min(st, TOUR_TOTAL);
+    const loc = tourLocate(vt), i = loc[0], localSec = loc[1];
+
+    if (barRef.current) barRef.current.style.transform = "scaleX(" + p.toFixed(4) + ")";
+    if (hintRef.current) {
+      const ha = clamp01(1 - p * 26);
+      if (hintRef.current._a !== ha) { hintRef.current._a = ha; hintRef.current.style.opacity = ha; }
+    }
+
+    // textos: fade in / out según la posición dentro del clip visible
+    let dimA = 0;
+    for (let k = 0; k < TOUR_CLIPS.length; k++) {
+      const el = capRefs.current[k];
+      if (!el) continue;
+      let a = 0;
+      if (k === i && st <= TOUR_TOTAL) {
+        const u = clamp01(localSec / TOUR_CLIPS[k].dur);
+        a = clamp01(Math.min(u / TOUR_FADE, (1 - u) / TOUR_FADE, 1));
+        if (TOUR_DIM[TOUR_CLIPS[k].key]) dimA = a;
+      }
+      setCapAlpha(el, a);
+    }
+
+    // capa oscura de la escena que la pida, atada a la opacidad de su texto
+    const dimEl = dimRef.current;
+    if (dimEl && dimEl._a !== dimA) {
+      dimEl._a = dimA;
+      dimEl.style.opacity = dimA;
+      dimEl.style.visibility = dimA > 0.001 ? "visible" : "hidden";
+    }
+
+    // tarjeta de cierre: entra en el tramo virtual del final
+    if (outroRef.current) {
+      const oa = st > TOUR_TOTAL ? clamp01((st - TOUR_TOTAL) / (TOUR_OUTRO * 0.4)) : 0;
+      setCapAlpha(outroRef.current, oa);
+    }
+
+    // actual + siguiente
+    if (!urls.current[i] && !pending.current[i]) loadClip(i);
+    if (!urls.current[i + 1] && !pending.current[i + 1]) loadClip(i + 1);
+    if (urls.current[i]) attach(i);
+
+    const cur = active.current;
+    if (cur < 0 || v.readyState < 1) return;
+    const dur = (idx) => (isFinite(v.duration) && v.duration > 0 ? v.duration : tourDur(TOUR_CLIPS[idx]));
+
+    if (cur === i) {
+      const d = dur(i);
+      const ct = Math.min((localSec / TOUR_CLIPS[i].dur) * d, Math.max(d - 0.05, 0));
+      if (!v.seeking && Math.abs(v.currentTime - ct) > 0.02) v.currentTime = Math.max(ct, 0);
+    } else if (cur < i) {
+      // el siguiente clip aún no baja: congelamos el último frame del actual
+      const end = Math.max(dur(cur) - 0.05, 0);
+      if (!v.seeking && v.currentTime < end - 0.05) v.currentTime = end;
+    }
+  }
+
+  useEffect(() => {
+    const sec = sectionRef.current;
+    if (!sec) return;
+    const start = () => { if (running.current) return; running.current = true; raf.current = requestAnimationFrame(tick); };
+    const stop = () => { running.current = false; cancelAnimationFrame(raf.current); setNav(false); };
+
+    // el rAF solo corre mientras la sección está cerca del viewport
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) { loadClip(0); loadClip(1); start(); }
+        else stop();
+      });
+    }, { rootMargin: "600px 0px" });
+    io.observe(sec);
+
+    const onFirst = () => unlock();
+    window.addEventListener("touchstart", onFirst, { once: true, passive: true });
+    window.addEventListener("pointerdown", onFirst, { once: true, passive: true });
+
+    return () => {
+      io.disconnect();
+      stop();
+      window.removeEventListener("touchstart", onFirst);
+      window.removeEventListener("pointerdown", onFirst);
+      const v = videoRef.current;
+      if (v) { try { v.removeAttribute("src"); v.load(); } catch (e) {} }
+      Object.keys(urls.current).forEach((k) => { try { URL.revokeObjectURL(urls.current[k]); } catch (e) {} });
+      urls.current = {};
+      pending.current = {};
+    };
+  }, []);
+
+  return (
+    <section id="tour" ref={sectionRef} style={{ position: "relative", height: TOUR_SCROLL_VH + "vh", background: "var(--ink)" }}>
+      <div ref={stageRef} className="pb-tour-stage" style={{ position: "sticky", top: 0, height: "100vh", overflow: "hidden", background: "var(--ink)" }}>
+        <video
+          ref={videoRef}
+          muted
+          playsInline
+          preload="auto"
+          controls={false}
+          disablePictureInPicture
+          tabIndex={-1}
+          aria-hidden="true"
+          onLoadedData={() => { setReady(true); const v = videoRef.current; if (v) { try { v.pause(); } catch (e) {} } }}
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: ready ? 1 : 0, transition: "opacity .7s ease", pointerEvents: "none" }}
+        />
+
+        {/* oscurecimiento de escena (solo las de TOUR_DIM) */}
+        <div ref={dimRef} className="pb-tour-dim" style={{ opacity: 0, visibility: "hidden" }} />
+
+        {/* scrim superior: legibilidad del nav sobre el video */}
+        <div className="pb-tour-scrim-top" />
+        {/* degradado inferior: sube desde el borde hasta el 65% de la altura */}
+        <div className="pb-tour-scrim" />
+
+        {/* textos anclados por clip */}
+        <div className="pb-tour-caps">
+          {TOUR_CLIPS.map((c, k) => {
+            const cap = caps[c.key] || {};
+            if (!cap.t && !cap.d) return null;
+            const cards = cap.cards || [];
+            const tags = cards.length ? [] : (cap.tags || []).slice(0, 3);
+            const cls = "pb-tour-cap" + (cap.layout === "center" ? " pb-tour-cap--center" : "");
+            return (
+              <div key={c.key} ref={(el) => { capRefs.current[k] = el; }} className={cls} style={{ opacity: 0, visibility: "hidden" }}>
+                {cap.eyebrow ? <div className="pb-tour-eyebrow">{cap.eyebrow}</div> : null}
+                {cap.t ? <h2 className="pb-tour-title">{cap.t}</h2> : null}
+                {cap.d ? <p className="pb-tour-text">{cap.d}</p> : null}
+                {cards.length ? (
+                  <div className="pb-tour-pois">
+                    {cards.map((cd, n) => (
+                      <div key={n} className="pb-poi">
+                        <div className="pb-poi-time">{cd.time}</div>
+                        <div className="pb-poi-name">{cd.name}</div>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+                {tags.length ? (
+                  <div className="pb-tour-tags">
+                    {tags.map((tg, n) => <span key={n}>{tg}</span>)}
+                  </div>
+                ) : null}
+              </div>
+            );
+          })}
+
+          {/* cierre del recorrido */}
+          {O.t ? (
+            <div ref={outroRef} className="pb-tour-cap pb-tour-outro" style={{ opacity: 0, visibility: "hidden" }}>
+              <h2 className="pb-tour-title">{O.t}</h2>
+              {O.d ? <p className="pb-tour-text">{O.d}</p> : null}
+              {O.extra ? <p className="pb-tour-extra">{O.extra}</p> : null}
+              {O.cta ? (
+                <a href="#modelos" className="btn pb-tour-btn"
+                  onClick={(e) => { if (onModels) { e.preventDefault(); onModels(); } }}>{O.cta}</a>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+
+        {/* estado de carga */}
+        {!ready && !error ? (
+          <div className="pb-tour-msg">{T.loading}</div>
+        ) : null}
+        {error ? <div className="pb-tour-msg">{T.error}</div> : null}
+
+        {/* aviso de scroll, se desvanece al empezar */}
+        {T.hint ? (
+          <div ref={hintRef} className="pb-tour-hint">
+            <span>{T.hint}</span>
+            <svg width="14" height="20" viewBox="0 0 14 20" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"><path d="M7 4v9M3.5 9.5 7 13l3.5-3.5"/></svg>
+          </div>
+        ) : null}
+
+        {/* progreso del recorrido */}
+        <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 2, background: "rgba(255,255,255,.14)" }}>
+          <div ref={barRef} style={{ height: "100%", background: "var(--accent)", transformOrigin: "0 50%", transform: "scaleX(0)" }} />
+        </div>
+      </div>
+
+      <style>{`
+        /* ── degradados de contraste ───────────────────────────── */
+        .pb-tour-scrim {
+          position:absolute; inset:0; pointer-events:none;
+          background: linear-gradient(to top,
+            color-mix(in srgb, var(--ink) 88%, transparent) 0%,
+            color-mix(in srgb, var(--ink) 79%, transparent) 9%,
+            color-mix(in srgb, var(--ink) 66%, transparent) 19%,
+            color-mix(in srgb, var(--ink) 51%, transparent) 29%,
+            color-mix(in srgb, var(--ink) 36%, transparent) 39%,
+            color-mix(in srgb, var(--ink) 23%, transparent) 47%,
+            color-mix(in srgb, var(--ink) 12%, transparent) 54%,
+            color-mix(in srgb, var(--ink) 5%, transparent) 60%,
+            color-mix(in srgb, var(--ink) 1%, transparent) 63%,
+            transparent 65%);
+        }
+        /* Oscurecimiento de escena. Dos capas en un solo elemento:
+           el color plano cubre la pantalla completa y el radial refuerza
+           la zona central, donde caen el titular y las cajas.
+           Compuestas dan ~0.55 en los bordes y ~0.74 en el centro. */
+        .pb-tour-dim {
+          position:absolute; inset:0; pointer-events:none;
+          background:
+            radial-gradient(ellipse 92% 66% at 50% 50%,
+              rgba(0,0,0,.42) 0%,
+              rgba(0,0,0,.32) 42%,
+              rgba(0,0,0,.14) 68%,
+              rgba(0,0,0,0) 85%),
+            rgba(0,0,0,.55);
+        }
+        .pb-tour-scrim-top {
+          position:absolute; left:0; right:0; top:0; height:22%; pointer-events:none;
+          background: linear-gradient(to bottom,
+            color-mix(in srgb, var(--ink) 42%, transparent) 0%,
+            color-mix(in srgb, var(--ink) 22%, transparent) 40%,
+            color-mix(in srgb, var(--ink) 7%, transparent) 72%,
+            transparent 100%);
+        }
+
+        /* ── bloque de texto: mitad inferior izquierda ─────────── */
+        .pb-tour-caps { position:absolute; inset:0; pointer-events:none; }
+        .pb-tour-cap {
+          position:absolute; left:0; right:0; bottom:10vh;
+          max-width:1240px; margin:0 auto; padding:0 40px;
+          will-change: opacity, transform;
+        }
+        .pb-tour-eyebrow {
+          font-family: var(--font-body), sans-serif;
+          font-size:12px; font-weight:600; letter-spacing:.28em; text-transform:uppercase;
+          color: var(--accent); margin-bottom:20px;
+          text-shadow: 0 1px 14px color-mix(in srgb, var(--ink) 70%, transparent);
+        }
+        .pb-tour-title {
+          font-family: 'Playfair Display', var(--font-head), Georgia, serif;
+          font-weight:400;
+          font-size: clamp(3.5rem, 11vw, 9rem);
+          line-height:.95; letter-spacing:-.03em;
+          color: var(--bg); margin:0; max-width:13ch;
+          text-shadow: 0 2px 30px color-mix(in srgb, var(--ink) 55%, transparent);
+        }
+        .pb-tour-text {
+          font-family: var(--font-body), sans-serif;
+          font-size: clamp(1rem, 1.6vw, 1.25rem);
+          line-height:1.6; color: var(--bg); opacity:.88;
+          max-width:480px; margin-top:24px;
+          text-shadow: 0 1px 16px color-mix(in srgb, var(--ink) 75%, transparent);
+        }
+        .pb-tour-tags {
+          display:flex; flex-wrap:wrap; align-items:center; margin-top:26px;
+          font-family: var(--font-body), sans-serif;
+          font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase;
+          color: var(--bg); opacity:.74;
+          text-shadow: 0 1px 12px color-mix(in srgb, var(--ink) 75%, transparent);
+        }
+        .pb-tour-tags span + span::before { content:"·"; margin:0 11px; opacity:.55; }
+
+        /* ── escena con layout centrado (09_balcon) ────────────────
+           El titular y el texto suben al centro de la pantalla en vez
+           de ir en la esquina inferior izquierda. */
+        .pb-tour-cap--center {
+          top:0; bottom:0; display:flex; flex-direction:column;
+          align-items:center; justify-content:center; text-align:center;
+        }
+        .pb-tour-cap--center .pb-tour-title {
+          /* más contenido que las otras escenas: titular, texto y tres
+             cajas altas. A 9rem no cabría en una laptop. */
+          font-size: clamp(2.5rem, 7vw, 5.5rem);
+          max-width:16ch;
+        }
+        .pb-tour-cap--center .pb-tour-text { margin-left:auto; margin-right:auto; max-width:560px; }
+
+        /* ── refuerzo de contraste de la escena centrada ───────────
+           Va todo bajo --center: las demás escenas conservan sus
+           sombras suaves originales. */
+        .pb-tour-cap--center .pb-tour-eyebrow {
+          color: var(--accent); opacity:1;
+          text-shadow: 0 2px 10px rgba(0,0,0,.95), 0 0 28px rgba(0,0,0,.75);
+        }
+        .pb-tour-cap--center .pb-tour-title {
+          text-shadow: 0 3px 18px rgba(0,0,0,.9), 0 0 44px rgba(0,0,0,.65);
+        }
+        .pb-tour-cap--center .pb-tour-text {
+          opacity:.96;
+          text-shadow: 0 2px 12px rgba(0,0,0,.95), 0 0 30px rgba(0,0,0,.65);
+        }
+
+        /* ── cajas de distancias ───────────────────────────────────── */
+        .pb-tour-pois {
+          display:flex; justify-content:center; align-items:stretch;
+          gap:22px; margin-top:46px; width:100%;
+        }
+        .pb-poi {
+          flex:1 1 0; min-width:0; max-width:320px;
+          display:flex; flex-direction:column; justify-content:center;
+          padding:46px 28px 38px; border-radius:4px;
+          /* negro sólido, no color-mix sobre --ink: las cajas tienen que
+             tapar el video, no dejarlo ver a través */
+          background: rgba(0,0,0,.6);
+          backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+          border:1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+          /* entrada escalonada: la dispara .is-in en el bloque padre */
+          opacity:0; transform: translateY(20px);
+          transition: opacity .55s ease, transform .55s cubic-bezier(.2,.7,.2,1);
+        }
+        .pb-tour-cap.is-in .pb-poi { opacity:1; transform:none; }
+        .pb-tour-cap.is-in .pb-poi:nth-child(2) { transition-delay:.15s; }
+        .pb-tour-cap.is-in .pb-poi:nth-child(3) { transition-delay:.3s; }
+        /* al salir se van juntas, sin escalonar */
+        .pb-tour-cap:not(.is-in) .pb-poi { transition-delay:0s; }
+        .pb-poi-time {
+          font-family:'Playfair Display', var(--font-head), Georgia, serif;
+          font-weight:400; font-size: clamp(2.5rem, 6vw, 4.5rem);
+          line-height:1; letter-spacing:-.02em; color: var(--bg);
+          text-shadow: 0 2px 16px rgba(0,0,0,.85);
+        }
+        .pb-poi-name {
+          font-family: var(--font-body), sans-serif;
+          font-size:13px; font-weight:600; letter-spacing:.2em; text-transform:uppercase;
+          color: var(--accent); line-height:1.45; margin-top:18px;
+          text-shadow: 0 1px 10px rgba(0,0,0,.9);
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .pb-poi { transition:none; transition-delay:0s !important; }
+        }
+
+        /* ── cierre ────────────────────────────────────────────── */
+        .pb-tour-outro .pb-tour-text { opacity:.94; margin-top:20px; }
+        .pb-tour-extra {
+          font-family: var(--font-body), sans-serif;
+          font-size:13.5px; line-height:1.55; color: var(--bg); opacity:.66;
+          max-width:420px; margin-top:14px;
+          text-shadow: 0 1px 12px color-mix(in srgb, var(--ink) 75%, transparent);
+        }
+        .pb-tour-btn {
+          pointer-events:auto; margin-top:28px;
+          background: var(--bg); color: var(--ink);
+        }
+        .pb-tour-btn:hover { background:#fff; transform: translateY(-1px); }
+
+        /* ── viewports bajos: el titular no debe comerse la pantalla ── */
+        @media (max-height: 860px) and (min-width: 761px) {
+          .pb-tour-title { font-size: clamp(2.8rem, 7vw, 5rem); }
+          .pb-tour-cap { bottom:8vh; }
+        }
+
+        .pb-tour-msg {
+          position:absolute; inset:0; display:grid; place-items:center;
+          font-family: var(--font-body), sans-serif; font-size:11.5px; font-weight:600;
+          letter-spacing:.22em; text-transform:uppercase; color:rgba(245,240,232,.62);
+          text-align:center; padding:0 24px; pointer-events:none;
+        }
+        .pb-tour-hint {
+          position:absolute; left:0; right:0; bottom:34px; display:flex; gap:9px;
+          align-items:center; justify-content:center; pointer-events:none;
+          font-family: var(--font-body), sans-serif; font-size:11px; font-weight:600;
+          letter-spacing:.2em; text-transform:uppercase; color:rgba(245,240,232,.66);
+        }
+        @media (max-width: 900px){ .pb-tour-cap{ padding:0 22px; bottom:12vh; } }
+
+        /* ── móvil: mismos videos 16:9, tipografía reescalada ──────
+           El clamp de escritorio (3.5rem mínimo) desborda en pantallas
+           angostas: un titular de 38 caracteres se comía la pantalla
+           completa. Aquí baja a un rango que deja respirar al texto
+           y a las etiquetas. */
+        @media (max-width: 760px){
+          .pb-tour-eyebrow { font-size:10.5px; letter-spacing:.24em; margin-bottom:14px; }
+          .pb-tour-title {
+            font-size: clamp(2.1rem, 9.5vw, 3.2rem);
+            line-height:1.0; letter-spacing:-.02em; max-width:100%;
+          }
+          .pb-tour-text { font-size:15px; margin-top:16px; max-width:100%; }
+          .pb-tour-tags { font-size:10px; letter-spacing:.12em; margin-top:18px; }
+          .pb-tour-tags span + span::before { margin:0 8px; }
+          .pb-tour-extra { font-size:12.5px; margin-top:12px; }
+          .pb-tour-btn { margin-top:22px; }
+
+          /* Escena centrada: las tres cajas se apilan en columna.
+             Hay que comprimirlas o entre titular, texto y cajas se
+             desborda la pantalla del celular. */
+          .pb-tour-cap--center .pb-tour-title { font-size: clamp(1.9rem, 8.4vw, 2.6rem); max-width:100%; }
+          .pb-tour-cap--center .pb-tour-text { font-size:14px; margin-top:12px; }
+          .pb-tour-pois { flex-direction:column; gap:10px; margin-top:26px; }
+          .pb-poi { max-width:none; padding:16px 20px; border-radius:3px; }
+          .pb-poi-time { font-size:2rem; }
+          .pb-poi-name { font-size:10.5px; letter-spacing:.16em; margin-top:8px; }
+        }
+        /* pantallas cortas: aprieta un poco más la escena centrada */
+        @media (max-width: 760px) and (max-height: 680px) {
+          .pb-poi { padding:12px 18px; }
+          .pb-poi-time { font-size:1.6rem; }
+          .pb-tour-cap--center .pb-tour-text { display:none; }
+        }
+        @media (max-width: 400px){
+          .pb-tour-title { font-size: clamp(1.9rem, 8.6vw, 2.5rem); }
+        }
+      `}</style>
+    </section>
+  );
+}
+
 /* ---------- STATS ---------- */
 function Stats({ S }) {
   return (
@@ -228,7 +842,11 @@ function Stats({ S }) {
 }
 
 /* ---------- MODELOS ---------- */
-function Modelos({ S, onPick }) {
+function Modelos({ S, contact }) {
+  // Mensaje precargado de WhatsApp, distinto por modelo
+  const waFor = (m) => "https://wa.me/" + contact.whatsapp + "?text=" + encodeURIComponent(
+    (S.models.waModel || "").replace("{model}", m.name).replace("{area}", m.area)
+  );
   return (
     <section id="modelos" style={{ padding: "110px 0 100px" }}>
       <div className="wrap">
@@ -265,28 +883,24 @@ function Modelos({ S, onPick }) {
                   ))}
                 </div>
                 <div style={{ borderTop: "1px solid var(--line)", paddingTop: 16, marginTop: "auto", display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 8 }}>
-                  {!sold && m.preventa ? (
-                    <div>
-                      <div style={{ fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--ink)", fontWeight: 700 }}>{m.dcto || S.models.preventaLabel}</div>
-                      <div style={{ fontFamily: "var(--font-head)", fontSize: 24, marginTop: 2 }}>{m.preventa}</div>
-                      <div style={{ fontSize: 11.5, color: "var(--accent-deep)", textDecoration: "line-through", marginTop: 1 }}>{m.price}</div>
-                    </div>
-                  ) : (
-                    <div>
-                      <div style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--accent-deep)" }}>{S.models.listLabel}</div>
-                      <div style={{ fontFamily: "var(--font-head)", fontSize: 24, marginTop: 2 }}>{m.price}</div>
-                    </div>
-                  )}
-                  <button className="btn btn-outline" style={{ padding: "10px 15px", fontSize: 12 }} onClick={onPick}>{S.models.cta}</button>
+                  {/* Solo precio de preventa: ya no hay valor de lista tachado
+                      ni etiqueta de porcentaje. El descuento es 7.5% parejo. */}
+                  <div>
+                    <div style={{ fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--ink)", fontWeight: 700 }}>{S.models.preventaLabel}</div>
+                    <div style={{ fontFamily: "var(--font-head)", fontSize: 24, marginTop: 2 }}>{m.price}</div>
+                  </div>
+                  <a href={waFor(m)} target="_blank" rel="noopener" className="btn btn-outline" style={{ padding: "10px 15px", fontSize: 12 }}>{S.models.cta}</a>
                 </div>
               </div>
             </article>
           );})}
         </div>
         <div className="reveal" style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 28, flexWrap: "wrap" }}>
-          <span style={{ fontFamily: "var(--font-body)", fontSize: 12, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--ink)", border: "1px solid var(--ink)", padding: "6px 13px", borderRadius: 2 }}>{S.models.preventa}</span>
+          <span style={{ fontFamily: "var(--font-body)", fontSize: 12, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--ink)", border: "1px solid var(--ink)", padding: "6px 13px", borderRadius: 2 }}>{S.models.summary}</span>
           <p style={{ fontSize: 11.5, color: "var(--accent-deep)", maxWidth: 720, lineHeight: 1.5 }}>{S.models.note}</p>
         </div>
+        {/* nota al pie de la preventa, debajo de la línea de disponibilidad */}
+        <p className="reveal" style={{ fontFamily: "var(--font-body)", fontSize: 13, lineHeight: 1.55, color: "var(--ink-soft)", maxWidth: 600, margin: "22px auto 0", textAlign: "center" }}>{S.models.discountNote}</p>
       </div>
       <style>{`
         @media (max-width: 900px){ .pb-modelgrid{ grid-template-columns:1fr !important; } }
@@ -471,4 +1085,4 @@ function Footer({ S, contact }) {
   );
 }
 
-Object.assign(window, { Placeholder, Ico, Nav, Hero, HeroForm, Stats, Modelos, Video, Amenidades, Ubicacion, CTAFinal, Footer });
+Object.assign(window, { Placeholder, Ico, Nav, Hero, HeroForm, TourVirtual, Stats, Modelos, Video, Amenidades, Ubicacion, CTAFinal, Footer });

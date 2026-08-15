@@ -9,7 +9,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Serif+Display:ital@0;1&family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
 <style>
   *, *::before, *::after { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
+  /* Sin scroll-behavior: smooth. El tour virtual mide 1000vh y un scroll
+     animado lo atravesaría entero, disparando cientos de seeks al video.
+     Los saltos de ancla son instantáneos a propósito. */
+  html { scroll-behavior: auto; }
   body {
     margin: 0;
     font-family: var(--font-body, 'Public Sans'), system-ui, sans-serif;
